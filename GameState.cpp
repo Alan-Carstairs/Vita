@@ -357,14 +357,17 @@ void GameState::Render(gef::SpriteRenderer * spriteRenderer, float width, float 
 	//	renderer_3d_->DrawMesh(waypoints[i]);
 	//}
 	
-	for (int i = 0; i < Enemy_Manager->Enemies.size(); i++)
-	{
-		//renderer_3d_->DrawMesh(Moving_enemy[i]);
-		if (Enemy_Manager->Enemies[i]->alive)
-		{
-			Enemy_Manager->Render(renderer_3d_);
-		}
-	}
+
+	 Enemy_Manager->Render(renderer_3d_);
+
+	//for (int i = 0; i < Enemy_Manager->Enemies.size(); i++)
+	//{
+	//	//renderer_3d_->DrawMesh(Moving_enemy[i]);
+	//	if (Enemy_Manager->Enemies[i]->alive)
+	//	{
+	//		
+	//	}
+	//}
 	renderer_3d_->End();
 
 	//RenderOverlay();

@@ -32,8 +32,10 @@ void EnemyManager::Init(PrimitiveBuilder* pb, std::vector<gef::Vector4> wp)
 void EnemyManager::Update(float frame_time)
 {
 	for (int i = 0; i < Enemies.size(); i++) {
-		Enemies[i]->Update(frame_time);
-		//Enemies[i]->set_transform(enemy->local_transform * marker_transform1);
+		if (Enemies[i]->alive)
+		{
+			Enemies[i]->Update(frame_time);
+		}//Enemies[i]->set_transform(enemy->local_transform * marker_transform1);
 	}
 }
 
@@ -41,8 +43,11 @@ void EnemyManager::Update(float frame_time)
 void EnemyManager::Render(gef::Renderer3D* r3d)
 {
 	for (int i = 0; i < Enemies.size(); i++) {
-		r3d->DrawMesh(*Enemies[i]);
-		//Enemies[i]->set_transform(enemy->local_transform * marker_transform1);
+		if (Enemies[i]->alive)
+		{
+			r3d->DrawMesh(*Enemies[i]);
+			//Enemies[i]->set_transform(enemy->local_transform * marker_transform1);
+		}
 	}
 }
 
