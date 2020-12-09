@@ -95,28 +95,13 @@ void GameState::Init(gef::InputManager* input_manager, gef::AudioManager* audio_
      	waypoints[i].set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(.05f, .05f, .05f), waypoints[i].position_));
      
      }
-	// numberofEnemies = 2;
-
-	//for (int i = 0; i < numberofEnemies; i++)
-	//{
-	//	 Moving_enemy[i].set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(0.5, 0.5, 0.5), gef::Vector4(0.f, 0.f, 0.f)));
-	//	 Moving_enemy[i].position_ = gef::Vector4(0, 0, 0);
-	//	 Moving_enemy[i].init_Waypoints(waypoints_);
-	//	 Moving_enemy[i].setup_Waypoints(waypoints_[0], waypoints_[1]);
-	//	 //Moving_enemy.setup_Waypoints(waypoints_[Moving_enemy.currentWP_], waypoints_[Moving_enemy.nextWP_]);
-	//	 Moving_enemy[i].reCal_Velocity();
-	//	
-	//}
 
 	 Enemy_Manager = new EnemyManager();
 	 Enemy_Manager->Init(primitive_builder_, waypoints_);
-	 tower_.Init(primitive_builder_,Enemy_Manager->Enemies);
-	/* projectiles_.Init(waypoints[1].position_);
-	 projectiles_.position_ = gef::Vector4(.05f, .0f, .0f);
-	 projectiles_.set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(.005f, .005f, .005f), projectiles_.position_));*/
-     
-	//int asdf = 0;
-}	//
+	
+	 projectile_Manager.Init();
+	 tower_.Init(primitive_builder_, Enemy_Manager->Enemies, &projectile_Manager);
+}	
 
 void GameState::Release(gef::AudioManager* audio_manager)
 {
@@ -153,6 +138,7 @@ void GameState::Update(float frame_time, gef::InputManager * inputManager, State
 	{
 		// marker is being tracked, get its transform
 		sampleGetTransform(0, &marker_transform1);
+		root_marker = marker_transform1;
 		// set the transform of the 3D mesh instance to draw on
 		// top of the marker
 		inverse_marker_transform1.AffineInverse(marker_transform1);
@@ -162,16 +148,30 @@ void GameState::Update(float frame_time, gef::InputManager * inputManager, State
 		if (sampleIsMarkerFound(1)) //Marker 2
 		{
 			sampleGetTransform(1, &marker_transform2);
-			inverse_marker_transform2.AffineInverse(marker_transform2);
 
-			gef::Matrix44 local_marker_transform_2;
-			local_marker_transform_2 = marker_transform2 * inverse_marker_transform1;
+			gef::Matrix44 tower_local_transform;
+			tower_local_transform = marker_transform2 * inverse_marker_transform1;
+			tower_.local_transform = tower_local_transform;
+
+
+			tower_.Update(frame_time, Enemy_Manager->Enemies);
+			tower_.set_transform(tower_.local_transform * marker_transform1);
 		}
 
-		root_marker = marker_transform1;
-		
-		tower_.Update(frame_time);
-		tower_.set_transform(tower_.local_transform * marker_transform2);
+		projectile_Manager.Update(frame_time);
+		for (int i = 0; i < projectile_Manager.projectiles.size(); i++)
+		{
+			if (projectile_Manager.projectiles[i]->alive)
+			{
+				projectile_Manager.projectiles[i]->set_transform(projectile_Manager.projectiles[i]->local_transform * marker_transform1);
+				// collide projectiles with enemies
+			
+				projectile_Manager.projectiles[i]->CheckEnemyCollisions(Enemy_Manager->Enemies);
+			}
+
+		}
+
+
 		//local_marker_transform_2.SetTranslation(local_marker_transform_2.GetTranslation() / 2);
 
 		//cube_2.position_.Lerp(local_marker_transform_2.GetTranslation(), gef::Vector4(0, 0, 0), timer);
@@ -184,32 +184,30 @@ void GameState::Update(float frame_time, gef::InputManager * inputManager, State
 			waypoints[i].set_transform(waypoints[i].local_transform * marker_transform1);
 		}
 
-		projectiles_.Update(frame_time);
-		projectiles_.set_transform(projectiles_.local_transform * marker_transform2);
-		//projectiles_.Cal_Velocity((Moving_enemy.local_transform * marker_transform1 * inverse_marker_transform2).GetTranslation() , tower_.local_transform.GetTranslation());
-		//Moving_enemy.position_.Lerp(local_marker_transform_2.GetTranslation(), gef::Vector4(0, 0, 0), timer);
-		
-		//Moving_enemy.set_transform(Moving_enemy.local_transform * marker_transform1);
 
-	}
-	Enemy_Manager->Launch_Enemy(frame_time);
+		Enemy_Manager->Launch_Enemy(frame_time);
 		for (int i = 0; i < Enemy_Manager->Enemies.size(); i++)
 		{
-
-			Enemy_Manager->Enemies[i]->Update(frame_time);
-			Enemy_Manager->Enemies[i]->set_transform(Enemy_Manager->Enemies[i]->local_transform * marker_transform1);
+			if (Enemy_Manager->Enemies[i]->alive)
+			{
+				Enemy_Manager->Enemies[i]->Update(frame_time);
+				Enemy_Manager->Enemies[i]->set_transform(Enemy_Manager->Enemies[i]->local_transform * marker_transform1);
+			}
 		}
+	}
+	
 	
 	if (timer < 1) {
 		timer += frame_time / 5;
 	}
-	//for (int i; i < numberofEnemies; i++)
+
+	//for (int i; i < Enemy_Manager->Enemies.size();  i++)
 	//{
-//		isColliding = IsCollidingAABB(tower_, Moving_enemy[i]);
+		//isColliding = IsCollidingAABB(, Enemy_Manager->Enemies[i]->local_transform);
 	//}
-	if (isColliding) {
-		velocity_ *= -1;
-	}
+	//if (isColliding) {
+	//	velocity_ *= -1;
+	//}
 
 	if (input_manager_)
 	{
@@ -256,20 +254,10 @@ void GameState::Update(float frame_time, gef::InputManager * inputManager, State
 				{
 					for (int i = 0; i < Enemy_Manager->Enemies.size(); i++)
 					{
-						gef::Matrix44 enemyWorldSpace;
-						enemyWorldSpace = Enemy_Manager->Enemies[i]->local_transform * marker_transform1;
-
-						gef::Matrix44 enemyTowerSpace;
-						enemyTowerSpace = enemyWorldSpace * inverse_marker_transform2;
-
-						gef::Vector4 toEnemy;
-						toEnemy = enemyTowerSpace.GetTranslation();
-
-						projectiles_.Init(toEnemy);
-						//projectiles_.position_ = gef::Vector4(.05f, .0f, .0f);
+					//	projectiles_.Init(tower_.position_, Enemy_Manager->Enemies[i]->position_);
 					}
 
-					projectiles_.set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(.005f, .005f, .005f), projectiles_.position_));
+					//projectiles_.set_mesh(primitive_builder_->CreateBoxMesh(gef::Vector4(.005f, .005f, .005f), projectiles_.position_));
 					gef::DebugOut("Circle was pressed!\n");
 				}
 
@@ -361,10 +349,9 @@ void GameState::Render(gef::SpriteRenderer * spriteRenderer, float width, float 
 	renderer_3d_->Begin(false);
 
 	// DRAW 3D MESHES HERE
-	renderer_3d_->DrawMesh(projectiles_);
 	renderer_3d_->DrawMesh(tower_);
 
-	tower_.projectile_Manager.Render(renderer_3d_);
+	 projectile_Manager.Render(renderer_3d_);
 	//renderer_3d_->DrawMesh(map_);
 	//for (int i = 0; i < num_waypoints; i++) {
 	//	renderer_3d_->DrawMesh(waypoints[i]);
@@ -373,7 +360,10 @@ void GameState::Render(gef::SpriteRenderer * spriteRenderer, float width, float 
 	for (int i = 0; i < Enemy_Manager->Enemies.size(); i++)
 	{
 		//renderer_3d_->DrawMesh(Moving_enemy[i]);
-		Enemy_Manager->Render(renderer_3d_);
+		if (Enemy_Manager->Enemies[i]->alive)
+		{
+			Enemy_Manager->Render(renderer_3d_);
+		}
 	}
 	renderer_3d_->End();
 

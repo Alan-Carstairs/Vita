@@ -20,7 +20,7 @@ public:
 	float DisBetweenWayPoint;
 	bool HasBegun;
 	std::vector<gef::Vector4> waypoints_Pos;
-
+	bool alive;
 
 
 };

@@ -9,31 +9,33 @@ Tower::~Tower()
 {
 }
 
-void Tower::Init(PrimitiveBuilder *pb, std::vector<Enemy*> Enemies)
+void Tower::Init(PrimitiveBuilder *pb, std::vector<Enemy*> Enemies, ProjectileManager* projectile_manager)
 {
 	primbuilpointer = pb;
-	ep_ = Enemies;
-	projectile_Manager.Init( ep_);
 	towerRange = 0.4;
 	delayTimer = 0.0f;
+	projectileManager = projectile_manager;
 }
 
-void Tower::Update(float frametime)
+void Tower::Update(float frametime, std::vector<Enemy*> Enemies)
 {
+	// set tower position
+	position_ = local_transform.GetTranslation();
+
 	delayTimer += frametime;
 	
 	float distance;
-	for (int i = 0; i < ep_.size(); i++)
+	for (int i = 0; i < Enemies.size(); i++)
 	{
-		distance = (ep_[i]->position_ - position_).Length();
+		distance = (Enemies[i]->position_ - position_).Length();
 		if (delayTimer > 1.0)
 		{
 			if (distance < towerRange)
 			{
-				projectile_Manager.createprojectile(primbuilpointer, ep_[i]->position_);
+				projectileManager->createprojectile(primbuilpointer, position_, Enemies[i]->position_);
 				delayTimer = 0.0;
+				break;
 			}
 		}
 	}
-	projectile_Manager.Update(frametime);
 }

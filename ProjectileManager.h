@@ -23,12 +23,11 @@ class ProjectileManager
 public:
 	ProjectileManager();
 	~ProjectileManager();
-	void Init(std::vector<Enemy*> ep_);
+	void Init();
 	void Update(float frame_time);
 	void Render(gef::Renderer3D* r3d);
-	void createprojectile(PrimitiveBuilder* pb, gef::Vector4 emypos);
+	void createprojectile(PrimitiveBuilder* pb, gef::Vector4 startpos, gef::Vector4 emypos);
 	void Launch_Projectiles(float delta_Time);
-	void Delete_Projectiles();
 	std::vector<Projectiles*> projectiles;
 
 	int num_projectiles_launched = 0, Lauched_Projectile;

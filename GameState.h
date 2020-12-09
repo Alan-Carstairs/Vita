@@ -11,6 +11,7 @@
 #include "primitive_builder.h"
 #include "Enemy.h"
 #include "Tower.h"
+#include "ProjectileManager.h"
 #include "Projectiles.h"
 #include "EnemyManager.h"
 
@@ -83,13 +84,10 @@ private:
 	Tower tower_;
 
 	gef::Matrix44  root_marker;
-	Projectiles projectiles_;
-	GameObject map_;
-	//int numberofEnemies; 
-	//Enemy Moving_enemy[10];
-	//std::vector<gef::Vector4> Enemies;
-	//Enemy emy;
+	GameObject map_;	
 	EnemyManager* Enemy_Manager;
+	ProjectileManager projectile_Manager;
+
 	/*gef::MeshInstance cube;
 	gef::MeshInstance AR_Cube;*/
 	int marker_id;

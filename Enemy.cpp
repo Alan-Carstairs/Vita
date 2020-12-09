@@ -12,6 +12,7 @@ void Enemy::Init()
 	currentWP_ = 0;
 	nextWP_ = 1;
 	scale_vector = gef::Vector4(.002, .002, .002);
+	alive = true;
 }
 
 bool Enemy::Update(float frame_time)

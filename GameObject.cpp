@@ -33,16 +33,12 @@ void GameObject::BuildTransform()
 	//gef::Matrix44 scale;
 	//gef::Matrix44 rotX;
 	//gef::Matrix44 trans;
-
 	//scale.SetIdentity();
 	//scale.Scale(scale_);
-
 	//rotX.SetIdentity();
 	//rotX.RotationX(...)
-
 	//trans.SetIdentity();
 	//trans.SetTranslation(position_);
-
 	//gef::Matrix44 transformMatrix = scale * trans;
 
 	//set_transform(transformMatrix);
